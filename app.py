@@ -106,10 +106,13 @@ def predict(inp):
 demo = gr.Interface(fn=predict,
                     inputs=gr.inputs.Image(type='pil'),
                     outputs=['plot'],
-                    examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
-                              ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
-                              ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
-                              ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
+                     examples=[["assets/sa_1309.jpg"], 
+                               ["assets/sa_8776.jpg"],
+                              ["assets/sa_10039.jpg"],],
+                    # examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
+                    #           ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
+                    #           ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
+                    #           ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
                     )
 
 demo.launch()
