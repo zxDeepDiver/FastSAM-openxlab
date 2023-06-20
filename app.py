@@ -1,11 +1,8 @@
 from ultralytics import YOLO
-from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import gradio as gr
-import io
 import torch
-# import cv2
 
 model = YOLO('checkpoints/FastSAM.pt')  # load a custom model
 
@@ -48,26 +45,27 @@ def show_mask(annotation, ax, random_color=True, bbox=None, points=None):
     return mask_image
 
 def post_process(annotations, image, mask_random_color=True, bbox=None, points=None):
-    plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(10, 10))
     plt.imshow(image)
     for i, mask in enumerate(annotations):
         show_mask(mask, plt.gca(),random_color=mask_random_color,bbox=bbox,points=points)
     plt.axis('off')
-    # create a BytesIO object
-    buf = io.BytesIO()
+    # # create a BytesIO object
+    # buf = io.BytesIO()
 
-    # save plot to buf
-    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.0)
+    # # save plot to buf
+    # plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.0)
     
-    # use PIL to open the image
-    img = Image.open(buf)
+    # # use PIL to open the image
+    # img = Image.open(buf)
     
-    # copy the image data
-    img_copy = img.copy()
+    # # copy the image data
+    # img_copy = img.copy()
+    plt.tight_layout()
     
-    # don't forget to close the buffer
-    buf.close()
-    return img_copy
+    # # don't forget to close the buffer
+    # buf.close()
+    return fig
 
 
 # def show_mask(annotation, ax, random_color=False):
@@ -107,7 +105,7 @@ def predict(inp):
 
 demo = gr.Interface(fn=predict,
                     inputs=gr.inputs.Image(type='pil'),
-                    outputs=gr.outputs.Image(type='pil'),
+                    outputs=['plot'],
                     examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
                               ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
                               ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
