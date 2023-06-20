@@ -93,8 +93,9 @@ def post_process(annotations, image, mask_random_color=True, bbox=None, points=N
 # post_process(results[0].masks, Image.open("../data/cake.png"))
 
 def predict(inp):
-    results = model(inp, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=1024)
+    results = model(inp, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=720)
     results = format_results(results[0], 100)
+    results.sort(key=lambda x: x['area'], reverse=True)
     pil_image = post_process(annotations=results, image=inp)
     return pil_image
 
