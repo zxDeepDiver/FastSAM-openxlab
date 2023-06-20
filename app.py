@@ -4,11 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gradio as gr
 import io
+import torch
 # import cv2
 
 model = YOLO('checkpoints/FastSAM.pt')  # load a custom model
 
-def show_mask(annotation, ax, random_color=False, bbox=None, points=None):
+def format_results(result,filter = 0):
+    annotations = []
+    n = len(result.masks.data)
+    for i in range(n):
+        annotation = {}
+        mask = result.masks.data[i] == 1.0
+
+    
+        if torch.sum(mask) < filter:
+            continue
+        annotation['id'] = i
+        annotation['segmentation'] = mask.cpu().numpy()
+        annotation['bbox'] = result.boxes.data[i]
+        annotation['score'] = result.boxes.conf[i]
+        annotation['area'] = annotation['segmentation'].sum()
+        annotations.append(annotation)
+    return annotations
+
+def show_mask(annotation, ax, random_color=True, bbox=None, points=None):
     if random_color :    # random mask color
         color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
     else:
@@ -28,28 +47,27 @@ def show_mask(annotation, ax, random_color=False, bbox=None, points=None):
     ax.imshow(mask_image)
     return mask_image
 
-def post_process(annotations, image, mask_random_color=False, bbox=None, points=None):
-    # image = cv2.imread(image_path)
-    # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+def post_process(annotations, image, mask_random_color=True, bbox=None, points=None):
     plt.figure(figsize=(10, 10))
     plt.imshow(image)
     for i, mask in enumerate(annotations):
         show_mask(mask, plt.gca(),random_color=mask_random_color,bbox=bbox,points=points)
     plt.axis('off')
-
     # create a BytesIO object
     buf = io.BytesIO()
 
     # save plot to buf
     plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0.0)
-    # plt.savefig('buffer/tmp.png', bbox_inches='tight', pad_inches=0.0)
     
     # use PIL to open the image
     img = Image.open(buf)
     
+    # copy the image data
+    img_copy = img.copy()
+    
     # don't forget to close the buffer
     buf.close()
-    return img
+    return img_copy
 
 
 # def show_mask(annotation, ax, random_color=False):
@@ -77,10 +95,15 @@ def post_process(annotations, image, mask_random_color=False, bbox=None, points=
 # post_process(results[0].masks, Image.open("../data/cake.png"))
 
 def predict(inp):
-    results = model(inp, device='0', retina_masks=True, iou=0.7, conf=0.25, imgsz=1024)
-    pil_image = post_process(results[0].masks, inp)  
+    results = model(inp, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=1024)
+    results = format_results(results[0], 100)
+    pil_image = post_process(annotations=results, image=inp)
     return pil_image
 
+# inp = 'assets/sa_192.jpg'
+# results = model(inp, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=1024)
+# results = format_results(results[0], 100)
+# post_process(annotations=results, image_path=inp)
 
 demo = gr.Interface(fn=predict,
                     inputs=gr.inputs.Image(type='pil'),
