@@ -134,12 +134,12 @@ def fast_show_mask_gpu(annotation, ax,
 
 # post_process(results[0].masks, Image.open("../data/cake.png"))
 
-def predict(input, input_size=512, high_quality_visual=True):
+def predict(input, input_size=512, high_visual_quality=True):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     input_size = int(input_size)  # 确保 imgsz 是整数
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     pil_image = fast_process(annotations=results[0].masks.data,
-                             image=input, high_quality=high_quality_visual, device=device)
+                             image=input, high_quality=high_visual_quality, device=device)
     return pil_image
 
 # input_size=1024
@@ -153,8 +153,8 @@ def predict(input, input_size=512, high_quality_visual=True):
 #                             image=input, high_quality=high_quality_visual, device=device)
 demo = gr.Interface(fn=predict,
                     inputs=[gr.components.Image(type='pil'),
-                            gr.components.Dropdown(choices=[512, 800, 1024], default=512),
-                            gr.components.Checkbox(default=True)],
+                            gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64),
+                            gr.components.Checkbox(value=True)],
                     outputs=['plot'],
                     # examples=[["assets/sa_8776.jpg", 1024, True]],
                     #    ["assets/sa_1309.jpg", 1024]],
