@@ -60,7 +60,7 @@ def fast_show_mask(annotation, ax):
 def predict(input, input_size):
     input_size = int(input_size)  # 确保 imgsz 是整数
     results = model(input, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
-    pil_image = fast_process(annotations=results[0].masks.data, image=input)
+    pil_image = fast_process(annotations=results[0].masks.data.numpy(), image=input)
 
     return pil_image
 
