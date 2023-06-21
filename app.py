@@ -56,12 +56,12 @@ def post_process(annotations, image, mask_random_color=True, bbox=None, points=N
 
 # post_process(results[0].masks, Image.open("../data/cake.png"))
 
-def predict(inp, input_size):
+def predict(input, input_size):
     input_size = int(input_size)  # 确保 imgsz 是整数
-    results = model(inp, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
+    results = model(input, device='cpu', retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     results = format_results(results[0], 100)
     results.sort(key=lambda x: x['area'], reverse=True)
-    pil_image = post_process(annotations=results, image=inp)
+    pil_image = post_process(annotations=results, image=input)
     return pil_image
 
 # inp = 'assets/sa_192.jpg'
@@ -70,7 +70,7 @@ def predict(inp, input_size):
 # post_process(annotations=results, image_path=inp)
 
 demo = gr.Interface(fn=predict,
-                    inputs=[gr.inputs.Image(type='pil'), gr.inputs.Dropdown(choices=[512, 800, 1024])],
+                    inputs=[gr.inputs.Image(type='pil'), gr.inputs.Dropdown(choices=[512, 800, 1024], default=1024)],
                     outputs=['plot'],
                      examples=[["assets/sa_8776.jpg", 1024]],
                             #    ["assets/sa_1309.jpg", 1024]],
