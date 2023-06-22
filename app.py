@@ -6,7 +6,7 @@ import cv2
 import torch
 # import queue
 # import threading
-# from PIL import Image
+from PIL import Image
 
 
 model = YOLO('checkpoints/FastSAM.pt')  # load a custom model
@@ -18,8 +18,9 @@ def fast_process(annotations, image, high_quality, device):
 
     original_h = image.height
     original_w = image.width
-    fig = plt.figure(figsize=(10, 10))
-    plt.imshow(image)
+    image = image.convert('RGBA')
+    # fig = plt.figure(figsize=(10, 10))
+    # plt.imshow(image)
     if high_quality == True:
         if isinstance(annotations[0],torch.Tensor):
             annotations = np.array(annotations.cpu())
@@ -28,7 +29,7 @@ def fast_process(annotations, image, high_quality, device):
             annotations[i] = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_OPEN, np.ones((8, 8), np.uint8))
     if device == 'cpu':
         annotations = np.array(annotations)
-        fast_show_mask(annotations,
+        inner_mask = fast_show_mask(annotations,
                        plt.gca(),
                        bbox=None,
                        points=None,
@@ -39,13 +40,14 @@ def fast_process(annotations, image, high_quality, device):
     else:
         if isinstance(annotations[0],np.ndarray):
             annotations = torch.from_numpy(annotations)
-        fast_show_mask_gpu(annotations,
+        inner_mask = fast_show_mask_gpu(annotations,
                            plt.gca(),
                            bbox=None,
                            points=None,
                            pointlabel=None)
     if isinstance(annotations, torch.Tensor):
         annotations = annotations.cpu().numpy()
+    
     if high_quality == True:
         contour_all = []
         temp = np.zeros((original_h, original_w,1))
@@ -58,12 +60,17 @@ def fast_process(annotations, image, high_quality, device):
                 contour_all.append(contour)
         cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.8])
-        contour_mask = temp / 225 * color.reshape(1, 1, -1)
-        plt.imshow(contour_mask)
-
-    plt.axis('off')
-    plt.tight_layout()
-    return fig
+        contour_mask = temp / 255 * color.reshape(1, 1, -1)
+        overlay_contour = Image.fromarray((contour_mask * 255).astype(np.uint8), 'RGBA')
+        image.paste(overlay_contour, (0, 0), overlay_contour)
+        # plt.imshow(contour_mask)
+    overlay_inner = Image.fromarray((inner_mask * 255).astype(np.uint8), 'RGBA')
+    image.paste(overlay_inner, (0, 0), overlay_inner)
+        
+    return image
+    # plt.axis('off')
+    # plt.tight_layout()
+    # return fig
 
 
 #   CPU post process
@@ -85,12 +92,12 @@ def fast_show_mask(annotation, ax, bbox=None,
     visual = np.concatenate([color,transparency],axis=-1)
     mask_image = np.expand_dims(annotation,-1) * visual
 
-    show = np.zeros((height,weight,4))
+    mask = np.zeros((height,weight,4))
 
     h_indices, w_indices = np.meshgrid(np.arange(height), np.arange(weight), indexing='ij')
     indices = (index[h_indices, w_indices], h_indices, w_indices, slice(None))
     # 使用向量化索引更新show的值
-    show[h_indices, w_indices, :] = mask_image[indices]
+    mask[h_indices, w_indices, :] = mask_image[indices]
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         ax.add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='b', linewidth=1))
@@ -100,8 +107,10 @@ def fast_show_mask(annotation, ax, bbox=None,
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==0], [point[1] for i, point in enumerate(points) if pointlabel[i]==0], s=20, c='m')
     
     if retinamask==False:
-        show = cv2.resize(show,(target_width,target_height),interpolation=cv2.INTER_NEAREST)
-    ax.imshow(show)
+        mask = cv2.resize(mask, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
+    # ax.imshow(mask)
+    
+    return mask
 
 
 def fast_show_mask_gpu(annotation, ax,
@@ -120,12 +129,12 @@ def fast_show_mask_gpu(annotation, ax,
     visual = torch.cat([color,transparency],dim=-1)
     mask_image = torch.unsqueeze(annotation,-1) * visual
     # 按index取数，index指每个位置选哪个batch的数，把mask_image转成一个batch的形式
-    show = torch.zeros((height,weight,4)).to(annotation.device)
+    mask = torch.zeros((height,weight,4)).to(annotation.device)
     h_indices, w_indices = torch.meshgrid(torch.arange(height), torch.arange(weight))
     indices = (index[h_indices, w_indices], h_indices, w_indices, slice(None))
     # 使用向量化索引更新show的值
-    show[h_indices, w_indices, :] = mask_image[indices]
-    show_cpu = show.cpu().numpy()
+    mask[h_indices, w_indices, :] = mask_image[indices]
+    mask_cpu = mask.cpu().numpy()
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         ax.add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='b', linewidth=1))
@@ -133,9 +142,15 @@ def fast_show_mask_gpu(annotation, ax,
     if points is not None:
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==1], [point[1] for i, point in enumerate(points) if pointlabel[i]==1], s=20, c='y')
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==0], [point[1] for i, point in enumerate(points) if pointlabel[i]==0], s=20, c='m')
-    ax.imshow(show_cpu)
+    # ax.imshow(mask_cpu)
+    return mask_cpu
 
 
+# # 预测队列
+# prediction_queue = queue.Queue(maxsize=5)
+
+# # 线程锁
+# lock = threading.Lock()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -157,12 +172,14 @@ def predict(input, input_size=512, high_visual_quality=False):
 # results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
 # pil_image = fast_process(annotations=results[0].masks.data,
 #                             image=input, high_quality=high_quality_visual, device=device)
+
 app_interface = gr.Interface(fn=predict,
-                    inputs=[gr.components.Image(type='pil'),
+                    inputs=[gr.Image(type='pil'),
                             gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size'),
-                            gr.components.Checkbox(value=False, label='high_visual_quality')],
-                    outputs=['plot'],
-                    examples=[["assets/sa_8776.jpg", 1024, True]],
+                            gr.components.Checkbox(value=True, label='high_visual_quality')],
+                    # outputs=['plot'],
+                    outputs=gr.Image(type='pil'),
+                    examples=[["assets/sa_8776.jpg"]],
                     # #    ["assets/sa_1309.jpg", 1024]],
                     # examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
                     #           ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],

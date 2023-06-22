@@ -18,6 +18,7 @@ def fast_process(annotations, image, high_quality, device):
 
     original_h = image.height
     original_w = image.width
+    image = image.convert('RGBA')
     # fig = plt.figure(figsize=(10, 10))
     # plt.imshow(image)
     if high_quality == True:
@@ -46,6 +47,7 @@ def fast_process(annotations, image, high_quality, device):
                            pointlabel=None)
     if isinstance(annotations, torch.Tensor):
         annotations = annotations.cpu().numpy()
+    
     if high_quality == True:
         contour_all = []
         temp = np.zeros((original_h, original_w,1))
@@ -59,15 +61,11 @@ def fast_process(annotations, image, high_quality, device):
         cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.8])
         contour_mask = temp / 255 * color.reshape(1, 1, -1)
+        overlay_contour = Image.fromarray((contour_mask * 255).astype(np.uint8), 'RGBA')
+        image.paste(overlay_contour, (0, 0), overlay_contour)
         # plt.imshow(contour_mask)
-    image = image.convert('RGBA')
     overlay_inner = Image.fromarray((inner_mask * 255).astype(np.uint8), 'RGBA')
-    overlay_contour = Image.fromarray((contour_mask * 255).astype(np.uint8), 'RGBA')
-    # image = image.convert('RGBA')
-    # image = Image.alpha_composite(image, overlay_inner)
-    # image = Image.alpha_composite(image, overlay_contour)
     image.paste(overlay_inner, (0, 0), overlay_inner)
-    image.paste(overlay_contour, (0, 0), overlay_contour)
         
     return image
     # plt.axis('off')
@@ -176,11 +174,11 @@ def predict(input, input_size=512, high_visual_quality=False):
 #                             image=input, high_quality=high_quality_visual, device=device)
 
 app_interface = gr.Interface(fn=predict,
-                    inputs=[gr.components.Image(type='pil'),
+                    inputs=[gr.Image(type='pil'),
                             gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size'),
                             gr.components.Checkbox(value=False, label='high_visual_quality')],
                     # outputs=['plot'],
-                    outputs=gr.components.Image(type='pil'),
+                    outputs=gr.Image(type='pil'),
                     examples=[["assets/sa_8776.jpg", 1024, True]],
                     # #    ["assets/sa_1309.jpg", 1024]],
                     # examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
