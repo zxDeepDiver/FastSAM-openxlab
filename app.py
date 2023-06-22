@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import gradio as gr
 import cv2
 import torch
-from PIL import Image
+# import queue
+# import time
+
+# from PIL import Image
+
 
 model = YOLO('checkpoints/FastSAM.pt')  # load a custom model
 
@@ -132,15 +136,37 @@ def fast_show_mask_gpu(annotation, ax,
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==0], [point[1] for i, point in enumerate(points) if pointlabel[i]==0], s=20, c='m')
     ax.imshow(show_cpu)
 
-# post_process(results[0].masks, Image.open("../data/cake.png"))
+
+# # 建立请求队列和线程同步锁
+# request_queue = queue.Queue(maxsize=10)
+# lock = queue.Queue()
 
 def predict(input, input_size=512, high_visual_quality=True):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     input_size = int(input_size)  # 确保 imgsz 是整数
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
-    pil_image = fast_process(annotations=results[0].masks.data,
+    fig = fast_process(annotations=results[0].masks.data,
                              image=input, high_quality=high_visual_quality, device=device)
-    return pil_image
+    return fig
+
+# # 将耗时的函数包装在另一个函数中，用于控制队列和线程同步
+# def process_request():
+#     while True:
+#         if not request_queue.empty():
+#             # 如果请求队列不为空，则处理该请求
+#             try:
+#                 lock.put(1)   # 加锁，防止同时处理多个请求
+#                 input_package = request_queue.get()
+#                 fig = predict(input_package)
+#                 request_queue.task_done()   # 请求处理结束，移除请求
+#                 lock.get()   # 解锁
+#                 yield fig   # 返回预测结果
+#             except:
+#                 lock.get()   # 出错时也需要解锁
+#         else:
+#             # 如果请求队列为空，则等待新的请求到达
+#             time.sleep(1)
+
 
 # input_size=1024
 # high_quality_visual=True
@@ -151,7 +177,7 @@ def predict(input, input_size=512, high_visual_quality=True):
 # results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
 # pil_image = fast_process(annotations=results[0].masks.data,
 #                             image=input, high_quality=high_quality_visual, device=device)
-demo = gr.Interface(fn=predict,
+app_interface = gr.Interface(fn=predict,
                     inputs=[gr.components.Image(type='pil'),
                             gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64),
                             gr.components.Checkbox(value=True)],
@@ -163,6 +189,20 @@ demo = gr.Interface(fn=predict,
                               ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
                               ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
                     cache_examples=False,
+                    title="Fast Segment Anthing (Everything mode)"
                     )
 
-demo.launch()
+# # 定义一个请求处理函数，将请求添加到队列中
+# def handle_request(value):
+#     try:
+#         request_queue.put_nowait(value)   # 添加请求到队列
+#     except:
+#         return "当前队列已满，请稍后再试！"
+#     return None
+
+# # 添加请求处理函数到应用程序界面
+# app_interface.add_transition("submit", handle_request)
+
+
+app_interface.queue(concurrency_count=2)
+app_interface.launch()
