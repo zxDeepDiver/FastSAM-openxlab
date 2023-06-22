@@ -157,7 +157,7 @@ def fast_show_mask_gpu(annotation, ax,
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def predict(input, input_size=512, high_visual_quality=False):
+def predict(input, input_size=512, high_visual_quality=True):
     input_size = int(input_size)  # 确保 imgsz 是整数
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
