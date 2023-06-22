@@ -159,12 +159,18 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def predict(input, input_size=512, high_visual_quality=True):
     input_size = int(input_size)  # 确保 imgsz 是整数
+    
+    # Thanks for the suggestion by hysts in HuggingFace.
+    w, h = input.size
+    scale = input_size / max(w, h)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+    input = input.resize((new_w, new_h))
+    
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
                              image=input, high_quality=high_visual_quality, device=device)
     return fig
-
-
 
 # input_size=1024
 # high_quality_visual=True
