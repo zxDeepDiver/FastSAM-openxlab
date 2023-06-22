@@ -57,7 +57,7 @@ def fast_process(annotations, image, high_quality, device):
             contours, _ = cv2.findContours(annotation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
                 contour_all.append(contour)
-        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 3)
+        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.9])
         contour_mask = temp / 255 * color.reshape(1, 1, -1)
         # plt.imshow(contour_mask)
