@@ -5,8 +5,7 @@ import gradio as gr
 import cv2
 import torch
 # import queue
-# import time
-
+# import threading
 # from PIL import Image
 
 
@@ -137,17 +136,50 @@ def fast_show_mask_gpu(annotation, ax,
     ax.imshow(show_cpu)
 
 
-# # 建立请求队列和线程同步锁
-# request_queue = queue.Queue(maxsize=10)
-# lock = queue.Queue()
+# # 预测队列
+# prediction_queue = queue.Queue(maxsize=5)
 
-def predict(input, input_size=512, high_visual_quality=True):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# # 线程锁
+# lock = threading.Lock()
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+def predict(input, input_size=512, high_visual_quality=False):
     input_size = int(input_size)  # 确保 imgsz 是整数
+    # # 获取线程锁
+    # with lock:
+    #     print('5')
+    #     # 将任务添加到队列
+    #     prediction_queue.put((input, input_size, high_visual_quality))
+        
+    # # 等待结果
+    # print('6')
+    # fig = prediction_queue.get()[0]
+    # print(fig)
+    # return fig
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
                              image=input, high_quality=high_visual_quality, device=device)
     return fig
+
+# def worker():
+#     while True:
+#         # 从队列获取任务
+#         print('1')
+#         input, input_size, high_visual_quality = prediction_queue.get()
+
+#         # 执行模型预测
+#         print('2')
+#         results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
+#         print('3')
+#         fig = fast_process(annotations=results[0].masks.data,
+#                            image=input, high_quality=high_visual_quality, device=device)
+#         print('4')
+#         # 将结果放回队列
+#         prediction_queue.put(fig)
+
+# # 在一个新的线程中启动工作函数
+# threading.Thread(target=worker).start()
 
 # # 将耗时的函数包装在另一个函数中，用于控制队列和线程同步
 # def process_request():
@@ -156,8 +188,8 @@ def predict(input, input_size=512, high_visual_quality=True):
 #             # 如果请求队列不为空，则处理该请求
 #             try:
 #                 lock.put(1)   # 加锁，防止同时处理多个请求
-#                 input_package = request_queue.get()
-#                 fig = predict(input_package)
+#                 input, input_size, high_visual_quality = request_queue.get()
+#                 fig = predict(input, input_size, high_visual_quality)
 #                 request_queue.task_done()   # 请求处理结束，移除请求
 #                 lock.get()   # 解锁
 #                 yield fig   # 返回预测结果
@@ -179,17 +211,17 @@ def predict(input, input_size=512, high_visual_quality=True):
 #                             image=input, high_quality=high_quality_visual, device=device)
 app_interface = gr.Interface(fn=predict,
                     inputs=[gr.components.Image(type='pil'),
-                            gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64),
-                            gr.components.Checkbox(value=True)],
+                            gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size'),
+                            gr.components.Checkbox(value=False, label='high_visual_quality')],
                     outputs=['plot'],
-                    # examples=[["assets/sa_8776.jpg", 1024, True]],
-                    #    ["assets/sa_1309.jpg", 1024]],
-                    examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
-                              ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
-                              ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
-                              ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
-                    cache_examples=False,
-                    title="Fast Segment Anthing (Everything mode)"
+                    examples=[["assets/sa_8776.jpg", 1024, True]],
+                    # #    ["assets/sa_1309.jpg", 1024]],
+                    # examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
+                    #           ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
+                    #           ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
+                    #           ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
+                    cache_examples=True,
+                    title="Fast Segment Anything (Everything mode)"
                     )
 
 # # 定义一个请求处理函数，将请求添加到队列中
@@ -201,8 +233,7 @@ app_interface = gr.Interface(fn=predict,
 #     return None
 
 # # 添加请求处理函数到应用程序界面
-# app_interface.add_transition("submit", handle_request)
+# app_interface.call_function()
 
-
-app_interface.queue(concurrency_count=2)
+app_interface.queue(concurrency_count=1, max_size=20)
 app_interface.launch()
