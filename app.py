@@ -136,68 +136,16 @@ def fast_show_mask_gpu(annotation, ax,
     ax.imshow(show_cpu)
 
 
-# # 预测队列
-# prediction_queue = queue.Queue(maxsize=5)
-
-# # 线程锁
-# lock = threading.Lock()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def predict(input, input_size=512, high_visual_quality=False):
     input_size = int(input_size)  # 确保 imgsz 是整数
-    # # 获取线程锁
-    # with lock:
-    #     print('5')
-    #     # 将任务添加到队列
-    #     prediction_queue.put((input, input_size, high_visual_quality))
-        
-    # # 等待结果
-    # print('6')
-    # fig = prediction_queue.get()[0]
-    # print(fig)
-    # return fig
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
                              image=input, high_quality=high_visual_quality, device=device)
     return fig
 
-# def worker():
-#     while True:
-#         # 从队列获取任务
-#         print('1')
-#         input, input_size, high_visual_quality = prediction_queue.get()
-
-#         # 执行模型预测
-#         print('2')
-#         results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
-#         print('3')
-#         fig = fast_process(annotations=results[0].masks.data,
-#                            image=input, high_quality=high_visual_quality, device=device)
-#         print('4')
-#         # 将结果放回队列
-#         prediction_queue.put(fig)
-
-# # 在一个新的线程中启动工作函数
-# threading.Thread(target=worker).start()
-
-# # 将耗时的函数包装在另一个函数中，用于控制队列和线程同步
-# def process_request():
-#     while True:
-#         if not request_queue.empty():
-#             # 如果请求队列不为空，则处理该请求
-#             try:
-#                 lock.put(1)   # 加锁，防止同时处理多个请求
-#                 input, input_size, high_visual_quality = request_queue.get()
-#                 fig = predict(input, input_size, high_visual_quality)
-#                 request_queue.task_done()   # 请求处理结束，移除请求
-#                 lock.get()   # 解锁
-#                 yield fig   # 返回预测结果
-#             except:
-#                 lock.get()   # 出错时也需要解锁
-#         else:
-#             # 如果请求队列为空，则等待新的请求到达
-#             time.sleep(1)
 
 
 # input_size=1024
@@ -224,16 +172,6 @@ app_interface = gr.Interface(fn=predict,
                     title="Fast Segment Anything (Everything mode)"
                     )
 
-# # 定义一个请求处理函数，将请求添加到队列中
-# def handle_request(value):
-#     try:
-#         request_queue.put_nowait(value)   # 添加请求到队列
-#     except:
-#         return "当前队列已满，请稍后再试！"
-#     return None
-
-# # 添加请求处理函数到应用程序界面
-# app_interface.call_function()
 
 app_interface.queue(concurrency_count=1, max_size=20)
 app_interface.launch()

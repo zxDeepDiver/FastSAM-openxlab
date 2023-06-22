@@ -14,5 +14,5 @@ opencv-python
 # seaborn>=0.11.0
 
 # Ultralytics-----------------------------------
-ultralytics==8.0.112
+ultralytics==8.0.121
 
