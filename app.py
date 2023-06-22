@@ -157,7 +157,7 @@ def fast_show_mask_gpu(annotation, ax,
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def predict(input, input_size=512, high_visual_quality=True):
+def predict(input, input_size=1024, high_visual_quality=True):
     input_size = int(input_size)  # 确保 imgsz 是整数
     
     # Thanks for the suggestion by hysts in HuggingFace.

@@ -57,7 +57,7 @@ def fast_process(annotations, image, high_quality, device):
             contours, _ = cv2.findContours(annotation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
                 contour_all.append(contour)
-        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 3)
+        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.9])
         contour_mask = temp / 255 * color.reshape(1, 1, -1)
         # plt.imshow(contour_mask)
@@ -157,7 +157,9 @@ def fast_show_mask_gpu(annotation, ax,
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def predict(input, input_size=512, high_visual_quality=True):
+def predict(input, input_size=1024, high_visual_quality=True):
+    input_size = int(input_size)  # 确保 imgsz 是整数
+    
     # Thanks for the suggestion by hysts in HuggingFace.
     w, h = input.size
     scale = input_size / max(w, h)
@@ -165,7 +167,6 @@ def predict(input, input_size=512, high_visual_quality=True):
     new_h = int(h * scale)
     input = input.resize((new_w, new_h))
     
-    input_size = int(input_size)  # 确保 imgsz 是整数
     results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
                              image=input, high_quality=high_visual_quality, device=device)
