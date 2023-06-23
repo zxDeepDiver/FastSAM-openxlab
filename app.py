@@ -28,12 +28,12 @@ description = """This is a demo on Github project 🏃 [Fast Segment Anything Mo
                 
               """
 
-examples = [["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
-            ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
-            ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
-            ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"]]
+examples = [["assets/sa_8776.jpg"], ["assets/sa_414.jpg"],
+            ["assets/sa_1309.jpg"], ["assets/sa_11025.jpg"],
+            ["assets/sa_561.jpg"], ["assets/sa_192.jpg"],
+            ["assets/sa_10039.jpg"], ["assets/sa_862.jpg"]]
 
-default_example = examples[5]
+default_example = examples[0]
 
 css = "h1 { text-align: center } .about { text-align: justify; padding-left: 10%; padding-right: 10%; }"
 
@@ -197,7 +197,7 @@ cond_img = gr.Image(label="Input", value=default_example[0], type='pil')
 
 segm_img = gr.Image(label="Segmented Image", interactive=False, type='pil')
 
-input_size_slider = gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size')
+input_size_slider = gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='Input_size (Our model was trained on a size of 1024)')
 
 with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
     with gr.Row():
