@@ -293,7 +293,7 @@ def fast_show_mask_gpu(
 # clip
 @torch.no_grad()
 def retriev(
-    model, preprocess, elements: [Image.Image], search_text: str, device
+    model, preprocess, elements, search_text: str, device
 ) -> int:
     preprocessed_images = [preprocess(image).to(device) for image in elements]
     tokenized_text = clip.tokenize([search_text]).to(device)

@@ -12,9 +12,10 @@ title = "<center><strong><font size='8'>🏃 Fast Segment Anything 🤗</font></
 news = """ # News
 
         🔥 Add the 'Advanced options" in Everything mode to get a more detailed adjustment.
-         
-        #  🔥 Support the points mode and box mode, text mode will come soon.
         """
+
+         
+        # 🔥 Support the points mode and box mode, text mode will come soon.
 
 description = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM).
                 
