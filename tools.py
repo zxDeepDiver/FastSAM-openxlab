@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
 import torch
-import clip
+# import clip
 
 
 def convert_box_xywh_to_xyxy(box):
@@ -290,20 +290,20 @@ def fast_show_mask_gpu(
     return mask_cpu
 
 
-# clip
-@torch.no_grad()
-def retriev(
-    model, preprocess, elements, search_text: str, device
-) -> int:
-    preprocessed_images = [preprocess(image).to(device) for image in elements]
-    tokenized_text = clip.tokenize([search_text]).to(device)
-    stacked_images = torch.stack(preprocessed_images)
-    image_features = model.encode_image(stacked_images)
-    text_features = model.encode_text(tokenized_text)
-    image_features /= image_features.norm(dim=-1, keepdim=True)
-    text_features /= text_features.norm(dim=-1, keepdim=True)
-    probs = 100.0 * image_features @ text_features.T
-    return probs[:, 0].softmax(dim=0)
+# # clip
+# @torch.no_grad()
+# def retriev(
+#     model, preprocess, elements, search_text: str, device
+# ) -> int:
+#     preprocessed_images = [preprocess(image).to(device) for image in elements]
+#     tokenized_text = clip.tokenize([search_text]).to(device)
+#     stacked_images = torch.stack(preprocessed_images)
+#     image_features = model.encode_image(stacked_images)
+#     text_features = model.encode_text(tokenized_text)
+#     image_features /= image_features.norm(dim=-1, keepdim=True)
+#     text_features /= text_features.norm(dim=-1, keepdim=True)
+#     probs = 100.0 * image_features @ text_features.T
+#     return probs[:, 0].softmax(dim=0)
 
 
 def crop_image(annotations, image_path):
@@ -381,15 +381,15 @@ def point_prompt(masks, points, pointlabel, target_height, target_width):  # num
     return onemask, 0
 
 
-def text_prompt(annotations, args):
-    cropped_boxes, cropped_images, not_crop, filter_id, annotaions = crop_image(
-        annotations, args.img_path
-    )
-    clip_model, preprocess = clip.load("ViT-B/32", device=args.device)
-    scores = retriev(
-        clip_model, preprocess, cropped_boxes, args.text_prompt, device=args.device
-    )
-    max_idx = scores.argsort()
-    max_idx = max_idx[-1]
-    max_idx += sum(np.array(filter_id) <= int(max_idx))
-    return annotaions[max_idx]["segmentation"], max_idx
+# def text_prompt(annotations, args):
+#     cropped_boxes, cropped_images, not_crop, filter_id, annotaions = crop_image(
+#         annotations, args.img_path
+#     )
+#     clip_model, preprocess = clip.load("ViT-B/32", device=args.device)
+#     scores = retriev(
+#         clip_model, preprocess, cropped_boxes, args.text_prompt, device=args.device
+#     )
+#     max_idx = scores.argsort()
+#     max_idx = max_idx[-1]
+#     max_idx += sum(np.array(filter_id) <= int(max_idx))
+#     return annotaions[max_idx]["segmentation"], max_idx
