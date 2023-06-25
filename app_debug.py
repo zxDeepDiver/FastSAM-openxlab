@@ -4,22 +4,45 @@ import matplotlib.pyplot as plt
 import gradio as gr
 import cv2
 import torch
-# import queue
-# import threading
 from PIL import Image
 
+# Load the pre-trained model
+model = YOLO('checkpoints/FastSAM.pt')
 
-model = YOLO('checkpoints/FastSAM.pt')  # load a custom model
+# Description
+title = "<center><strong><font size='8'>🏃 Fast Segment Anything 🤗</font></strong></center>"
 
+description = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM).
+                
+                🎯 Upload an Image, segment it with Fast Segment Anything (Everything mode). The other modes will come soon.
+                
+                ⌛️ It takes about 4~ seconds to generate segment results. The concurrency_count of queue is 1, please wait for a moment when it is crowded.
+                
+                🚀 To get faster results, you can use a smaller input size and leave high_visual_quality unchecked.
+                
+                📣 You can also obtain the segmentation results of any Image through this Colab: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1oX14f6IneGGw612WgVlAiy91UHwFAvr9?usp=sharing)
+                
+                😚 A huge thanks goes out to the @HuggingFace Team for supporting us with GPU grant.
+                
+                🏠 Check out our [Model Card 🏃](https://huggingface.co/An-619/FastSAM)
+                
+              """
 
-def fast_process(annotations, image, high_quality, device):
+examples = [["assets/sa_8776.jpg"], ["assets/sa_414.jpg"],
+            ["assets/sa_1309.jpg"], ["assets/sa_11025.jpg"],
+            ["assets/sa_561.jpg"], ["assets/sa_192.jpg"],
+            ["assets/sa_10039.jpg"], ["assets/sa_862.jpg"]]
+
+default_example = examples[0]
+
+css = "h1 { text-align: center } .about { text-align: justify; padding-left: 10%; padding-right: 10%; }"
+
+def fast_process(annotations, image, high_quality, device, scale):
     if isinstance(annotations[0],dict):
         annotations = [annotation['segmentation'] for annotation in annotations]
 
     original_h = image.height
     original_w = image.width
-    # fig = plt.figure(figsize=(10, 10))
-    # plt.imshow(image)
     if high_quality == True:
         if isinstance(annotations[0],torch.Tensor):
             annotations = np.array(annotations.cpu())
@@ -57,10 +80,9 @@ def fast_process(annotations, image, high_quality, device):
             contours, _ = cv2.findContours(annotation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
                 contour_all.append(contour)
-        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2)
+        cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2 // scale)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.9])
         contour_mask = temp / 255 * color.reshape(1, 1, -1)
-        # plt.imshow(contour_mask)
     image = image.convert('RGBA')
     
     overlay_inner = Image.fromarray((inner_mask * 255).astype(np.uint8), 'RGBA')
@@ -71,10 +93,6 @@ def fast_process(annotations, image, high_quality, device):
         image.paste(overlay_contour, (0, 0), overlay_contour)
         
     return image
-    # plt.axis('off')
-    # plt.tight_layout()
-    # return fig
-
 
 #   CPU post process
 def fast_show_mask(annotation, ax, bbox=None, 
@@ -111,7 +129,6 @@ def fast_show_mask(annotation, ax, bbox=None,
     
     if retinamask==False:
         mask = cv2.resize(mask, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
-    # ax.imshow(mask)
     
     return mask
 
@@ -145,19 +162,13 @@ def fast_show_mask_gpu(annotation, ax,
     if points is not None:
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==1], [point[1] for i, point in enumerate(points) if pointlabel[i]==1], s=20, c='y')
         plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i]==0], [point[1] for i, point in enumerate(points) if pointlabel[i]==0], s=20, c='m')
-    # ax.imshow(mask_cpu)
     return mask_cpu
 
 
-# # 预测队列
-# prediction_queue = queue.Queue(maxsize=5)
-
-# # 线程锁
-# lock = threading.Lock()
-
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def predict(input, input_size=1024, high_visual_quality=True):
+def segment_image(input, evt: gr.SelectData=None, input_size=1024, high_visual_quality=True, iou_threshold=0.7, conf_threshold=0.25):
+    point = (evt.index[0],evt.index[1])
     input_size = int(input_size)  # 确保 imgsz 是整数
     
     # Thanks for the suggestion by hysts in HuggingFace.
@@ -167,12 +178,12 @@ def predict(input, input_size=1024, high_visual_quality=True):
     new_h = int(h * scale)
     input = input.resize((new_w, new_h))
     
-    results = model(input, device=device, retina_masks=True, iou=0.7, conf=0.25, imgsz=input_size)
+    results = model(input, device=device, retina_masks=True, iou=iou_threshold, conf=conf_threshold, imgsz=input_size)
     fig = fast_process(annotations=results[0].masks.data,
-                             image=input, high_quality=high_visual_quality, device=device)
+                        image=input, high_quality=high_visual_quality,
+                        device=device, scale=(1024 // input_size),
+                        points=)
     return fig
-
-
 
 # input_size=1024
 # high_quality_visual=True
@@ -184,22 +195,93 @@ def predict(input, input_size=1024, high_visual_quality=True):
 # pil_image = fast_process(annotations=results[0].masks.data,
 #                             image=input, high_quality=high_quality_visual, device=device)
 
-app_interface = gr.Interface(fn=predict,
-                    inputs=[gr.Image(type='pil'),
-                            gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size'),
-                            gr.components.Checkbox(value=True, label='high_visual_quality')],
-                    # outputs=['plot'],
-                    outputs=gr.Image(type='pil'),
-                    examples=[["assets/sa_8776.jpg"]],
-                    # #    ["assets/sa_1309.jpg", 1024]],
-                    # examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
-                    #           ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
-                    #           ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
-                    #           ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
-                    cache_examples=True,
-                    title="Fast Segment Anything (Everything mode)"
-                    )
+cond_img = gr.Image(label="Input", value=default_example[0], type='pil')
+
+segm_img = gr.Image(label="Segmented Image", interactive=False, type='pil')
+
+input_size_slider = gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='Input_size (Our model was trained on a size of 1024)')
+
+with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
+    with gr.Row():
+        # Title
+        gr.Markdown(title)
+    #     # # Description
+    #     # gr.Markdown(description)
+        
+    # Images
+    with gr.Row(variant="panel"):
+        with gr.Column(scale=1):
+            cond_img.render()
+            
+        with gr.Column(scale=1):
+            segm_img.render()
+    
+    # Submit & Clear
+    with gr.Row():
+        with gr.Column():
+            input_size_slider.render()
+            
+            with gr.Row():
+                vis_check = gr.Checkbox(value=True, label='high_visual_quality')
+                
+                with gr.Column():
+                    segment_btn = gr.Button("Segment Anything", variant='primary')
+                    
+                # with gr.Column():
+                    # clear_btn = gr.Button("Clear", variant="primary")
+            
+            gr.Markdown("Try some of the examples below ⬇️")
+            gr.Examples(examples=examples,
+                        inputs=[cond_img],
+                        outputs=segm_img,
+                        fn=segment_image,
+                        cache_examples=True,
+                        examples_per_page=4)
+            # gr.Markdown("Try some of the examples below ⬇️")
+            # gr.Examples(examples=examples,
+            #             inputs=[cond_img, input_size_slider, vis_check, iou_threshold, conf_threshold],
+            #             outputs=output,
+            #             fn=segment_image,
+            #             examples_per_page=4)
+
+        with gr.Column():
+            with gr.Accordion("Advanced options", open=False):
+                iou_threshold = gr.Slider(0.1, 0.9, 0.7, step=0.1, label='iou_threshold')
+                conf_threshold = gr.Slider(0.1, 0.9, 0.25, step=0.05, label='conf_threshold')
+                
+            # Description
+            gr.Markdown(description)
+    
+    cond_img.select(segment_image, [], input_img)
+    
+    segment_btn.click(segment_image,
+                     inputs=[cond_img, input_size_slider, vis_check, iou_threshold, conf_threshold],
+                     outputs=segm_img)  
+    
+    # def clear():
+        # return None, None
+
+    # clear_btn.click(fn=clear, inputs=None, outputs=None)
+
+demo.queue()
+demo.launch()
+
+# app_interface = gr.Interface(fn=predict,
+#                     inputs=[gr.Image(type='pil'),
+#                             gr.components.Slider(minimum=512, maximum=1024, value=1024, step=64, label='input_size'),
+#                             gr.components.Checkbox(value=True, label='high_visual_quality')],
+#                     # outputs=['plot'],
+#                     outputs=gr.Image(type='pil'),
+#                     # examples=[["assets/sa_8776.jpg"]],
+#                     # #    ["assets/sa_1309.jpg", 1024]],
+#                     examples=[["assets/sa_192.jpg"], ["assets/sa_414.jpg"],
+#                               ["assets/sa_561.jpg"], ["assets/sa_862.jpg"],
+#                               ["assets/sa_1309.jpg"], ["assets/sa_8776.jpg"],
+#                               ["assets/sa_10039.jpg"], ["assets/sa_11025.jpg"],],
+#                     cache_examples=True,
+#                     title="Fast Segment Anything (Everything mode)"
+#                     )
 
 
-app_interface.queue(concurrency_count=1, max_size=20)
-app_interface.launch()
+# app_interface.queue(concurrency_count=1, max_size=20)
+# app_interface.launch()
