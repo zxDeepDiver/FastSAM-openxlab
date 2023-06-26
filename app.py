@@ -19,9 +19,7 @@ news = """ # 📖 News
         
         🔥 2023/06/26: Support the points mode. (Better and faster interaction will come soon!)
         
-        """
-
-         
+        """  
 
 description_e = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM).
                 
@@ -70,8 +68,8 @@ def segment_everything(
     conf_threshold=0.25,
     better_quality=False,
     withContours=True,
-    mask_random_color=True,
     use_retina=True,
+    mask_random_color=True,
     ):
     input_size = int(input_size)  # 确保 imgsz 是整数
 
