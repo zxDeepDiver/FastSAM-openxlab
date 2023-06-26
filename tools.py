@@ -93,9 +93,7 @@ def fast_process(
     scale,
     better_quality=False,
     mask_random_color=True,
-    points=None,
     bbox=None,
-    point_label=None,
     use_retina=True,
     withContours=True,
     ):
@@ -117,8 +115,6 @@ def fast_process(
             plt.gca(),
             random_color=mask_random_color,
             bbox=bbox,
-            points=points,
-            pointlabel=point_label,
             retinamask=use_retina,
             target_height=original_h,
             target_width=original_w,
@@ -131,8 +127,6 @@ def fast_process(
             plt.gca(),
             random_color=mask_random_color,
             bbox=bbox,
-            points=points,
-            pointlabel=point_label,
             retinamask=use_retina,
             target_height=original_h,
             target_width=original_w,
@@ -159,7 +153,7 @@ def fast_process(
         cv2.drawContours(temp, contour_all, -1, (255, 255, 255), 2 // scale)
         color = np.array([0 / 255, 0 / 255, 255 / 255, 0.9])
         contour_mask = temp / 255 * color.reshape(1, 1, -1)
-    i
+
     image = image.convert('RGBA')
     overlay_inner = Image.fromarray((inner_mask * 255).astype(np.uint8), 'RGBA')
     image.paste(overlay_inner, (0, 0), overlay_inner)
@@ -177,8 +171,6 @@ def fast_show_mask(
     ax,
     random_color=False,
     bbox=None,
-    points=None,
-    pointlabel=None,
     retinamask=True,
     target_height=960,
     target_width=960,
@@ -209,16 +201,6 @@ def fast_show_mask(
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         ax.add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='b', linewidth=1))
-    # draw point
-    if points is not None:
-        plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i] == 1],
-                    [point[1] for i, point in enumerate(points) if pointlabel[i] == 1],
-                    s=20,
-                    c='y')
-        plt.scatter([point[0] for i, point in enumerate(points) if pointlabel[i] == 0],
-                    [point[1] for i, point in enumerate(points) if pointlabel[i] == 0],
-                    s=20,
-                    c='m')
 
     if retinamask == False:
         mask = cv2.resize(mask, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
@@ -231,8 +213,6 @@ def fast_show_mask_gpu(
     ax,
     random_color=False,
     bbox=None,
-    points=None,
-    pointlabel=None,
     retinamask=True,
     target_height=960,
     target_width=960,
@@ -268,20 +248,6 @@ def fast_show_mask_gpu(
             plt.Rectangle(
                 (x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor="b", linewidth=1
             )
-        )
-    # draw point
-    if points is not None:
-        plt.scatter(
-            [point[0] for i, point in enumerate(points) if pointlabel[i] == 1],
-            [point[1] for i, point in enumerate(points) if pointlabel[i] == 1],
-            s=20,
-            c="y",
-        )
-        plt.scatter(
-            [point[0] for i, point in enumerate(points) if pointlabel[i] == 0],
-            [point[1] for i, point in enumerate(points) if pointlabel[i] == 0],
-            s=20,
-            c="m",
         )
     if retinamask == False:
         mask_cpu = cv2.resize(
