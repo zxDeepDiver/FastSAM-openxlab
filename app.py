@@ -19,11 +19,9 @@ news = """ # 📖 News
         
         🔥 2023/06/26: Support the points mode. (Better and faster interaction will come soon!)
         
-        """
+        """  
 
-         
-
-description_e = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM).
+description_e = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM). Welcome to give a star ⭐️ to it.
                 
                 🎯 Upload an Image, segment it with Fast Segment Anything (Everything mode). The other modes will come soon.
                 
@@ -39,19 +37,18 @@ description_e = """This is a demo on Github project 🏃 [Fast Segment Anything 
                 
               """
 
-description_p = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM).
+description_p = """ # 🎯 Instructions for points mode
+                This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM). Welcome to give a star ⭐️ to it.
                 
-                🎯 Upload an Image, add points and segment it with Fast Segment Anything (Points mode).
+                1. Upload an image or choose an example.
                 
-                ⌛️ It takes about 6~ seconds to generate segment results. The concurrency_count of queue is 1, please wait for a moment when it is crowded.
+                2. Choose the point label ('Add mask' means a positive point. 'Remove' Area means a negative point that is not segmented).
                 
-                🚀 To get faster results, you can use a smaller input size and leave high_visual_quality unchecked.
+                3. Add points one by one on the image.
                 
-                📣 You can also obtain the segmentation results of any Image through this Colab: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1oX14f6IneGGw612WgVlAiy91UHwFAvr9?usp=sharing)
+                4. Click the 'Segemnt with points prompt' button to get the segmentation results.
                 
-                😚 A huge thanks goes out to the @HuggingFace Team for supporting us with GPU grant.
-                
-                🏠 Check out our [Model Card 🏃](https://huggingface.co/An-619/FastSAM)
+                **5. If you get Error, click the 'Clear points' button and try again may help.**
                 
               """
 
@@ -70,8 +67,8 @@ def segment_everything(
     conf_threshold=0.25,
     better_quality=False,
     withContours=True,
-    mask_random_color=True,
     use_retina=True,
+    mask_random_color=True,
     ):
     input_size = int(input_size)  # 确保 imgsz 是整数
 
