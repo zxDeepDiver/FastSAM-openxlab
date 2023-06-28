@@ -46,7 +46,7 @@ description_p = """ # 🎯 Instructions for points mode
                 
                 3. Add points one by one on the image.
                 
-                4. Click the 'Segemnt with points prompt' button to get the segmentation results.
+                4. Click the 'Segment with points prompt' button to get the segmentation results.
                 
                 **5. If you get Error, click the 'Clear points' button and try again may help.**
                 
