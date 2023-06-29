@@ -189,7 +189,7 @@ segm_img_t = gr.Image(label="Segmented Image with text", interactive=False, type
 global_points = []
 global_point_label = []
 
-input_size_slider = gr.components.Slider(minimum=512,
+input_size_slider_e = gr.components.Slider(minimum=512,
                                          maximum=1024,
                                          value=1024,
                                          step=64,
@@ -218,7 +218,7 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
         # Submit & Clear
         with gr.Row():
             with gr.Column():
-                input_size_slider.render()
+                input_size_slider_e.render()
 
                 with gr.Row():
                     contour_check_e = gr.Checkbox(value=True, label='withContours', info='draw the edges of the masks')
@@ -238,12 +238,12 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
             with gr.Column():
                 with gr.Accordion("Advanced options", open=False):
                     # text_box = gr.Textbox(label="text prompt")
-                    iou_threshold = gr.Slider(0.1, 0.9, 0.7, step=0.1, label='iou', info='iou threshold for filtering the annotations')
-                    conf_threshold = gr.Slider(0.1, 0.9, 0.25, step=0.05, label='conf', info='object confidence threshold')
+                    iou_threshold_e = gr.Slider(0.1, 0.9, 0.7, step=0.1, label='iou', info='iou threshold for filtering the annotations')
+                    conf_threshold_e = gr.Slider(0.1, 0.9, 0.25, step=0.05, label='conf', info='object confidence threshold')
                     with gr.Row():
-                        mor_check = gr.Checkbox(value=False, label='better_visual_quality', info='better quality using morphologyEx')
+                        mor_check_e = gr.Checkbox(value=False, label='better_visual_quality', info='better quality using morphologyEx')
                         with gr.Column():
-                            retina_check = gr.Checkbox(value=True, label='use_retina', info='draw high-resolution segmentation masks')
+                            retina_check_e = gr.Checkbox(value=True, label='use_retina', info='draw high-resolution segmentation masks')
                 # Description
                 gr.Markdown(description_e)
 
@@ -315,12 +315,12 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
 
             with gr.Column():
                 with gr.Accordion("Advanced options", open=False):
-                    iou_threshold = gr.Slider(0.1, 0.9, 0.7, step=0.1, label='iou', info='iou threshold for filtering the annotations')
-                    conf_threshold = gr.Slider(0.1, 0.9, 0.25, step=0.05, label='conf', info='object confidence threshold')
+                    iou_threshold_t = gr.Slider(0.1, 0.9, 0.7, step=0.1, label='iou', info='iou threshold for filtering the annotations')
+                    conf_threshold_t = gr.Slider(0.1, 0.9, 0.25, step=0.05, label='conf', info='object confidence threshold')
                     with gr.Row():
-                        mor_check = gr.Checkbox(value=False, label='better_visual_quality', info='better quality using morphologyEx')
+                        mor_check_t = gr.Checkbox(value=False, label='better_visual_quality', info='better quality using morphologyEx')
                         with gr.Column():
-                            retina_check = gr.Checkbox(value=True, label='use_retina', info='draw high-resolution segmentation masks')
+                            retina_check_t = gr.Checkbox(value=True, label='use_retina', info='draw high-resolution segmentation masks')
 
                 # Description
                 gr.Markdown(description_e)
@@ -330,12 +330,12 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
     segment_btn_e.click(segment_everything,
                         inputs=[
                             cond_img_e,
-                            input_size_slider,
-                            iou_threshold,
-                            conf_threshold,
-                            mor_check,
+                            input_size_slider_e,
+                            iou_threshold_e,
+                            conf_threshold_e,
+                            mor_check_e,
                             contour_check_e,
-                            retina_check,
+                            retina_check_e,
                         ],
                         outputs=segm_img_e)
 
@@ -347,11 +347,11 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
                         inputs=[
                             cond_img_t,
                             input_size_slider_t,
-                            iou_threshold,
-                            conf_threshold,
-                            mor_check,
+                            iou_threshold_t,
+                            conf_threshold_t,
+                            mor_check_t,
                             contour_check_t,
-                            retina_check,
+                            retina_check_t,
                             text_box,
                         ],
                         outputs=segm_img_t)
