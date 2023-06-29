@@ -221,7 +221,7 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
                 input_size_slider.render()
 
                 with gr.Row():
-                    contour_check = gr.Checkbox(value=True, label='withContours', info='draw the edges of the masks')
+                    contour_check_e = gr.Checkbox(value=True, label='withContours', info='draw the edges of the masks')
 
                     with gr.Column():
                         segment_btn_e = gr.Button("Segment Everything", variant='primary')
@@ -298,7 +298,7 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
                                          info='Our model was trained on a size of 1024')
                 with gr.Row():
                     with gr.Column():
-                        contour_check = gr.Checkbox(value=True, label='withContours', info='draw the edges of the masks')
+                        contour_check_t = gr.Checkbox(value=True, label='withContours', info='draw the edges of the masks')
                         text_box = gr.Textbox(label="text prompt", value="a black dog")
 
                     with gr.Column():
@@ -334,7 +334,7 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
                             iou_threshold,
                             conf_threshold,
                             mor_check,
-                            contour_check,
+                            contour_check_e,
                             retina_check,
                         ],
                         outputs=segm_img_e)
@@ -350,7 +350,7 @@ with gr.Blocks(css=css, title='Fast Segment Anything') as demo:
                             iou_threshold,
                             conf_threshold,
                             mor_check,
-                            contour_check,
+                            contour_check_t,
                             retina_check,
                             text_box,
                         ],
