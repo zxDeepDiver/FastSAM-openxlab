@@ -24,43 +24,14 @@ device = torch.device(
 title = "<center><strong><font size='8'>🏃 Fast Segment Anything 🤗</font></strong></center>"
 
 news = """ # 📖 News
-        🔥 2023/07/14: Add a "wider result" button in text mode (Thanks for [gaoxinge](https://github.com/CASIA-IVA-Lab/FastSAM/pull/95)).
-
-        🔥 2023/06/29: Support the text mode (Thanks for [gaoxinge](https://github.com/CASIA-IVA-Lab/FastSAM/pull/47)).
-
-        🔥 2023/06/26: Support the points mode. (Better and faster interaction will come soon!)
-
-        🔥 2023/06/24: Add the 'Advanced options" in Everything mode to get a more detailed adjustment.        
+        2023-8-2 成功上线 OpenXLab 
         """  
 
-description_e = """This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM). Welcome to give a star ⭐️ to it.
-                
-                🎯 Upload an Image, segment it with Fast Segment Anything (Everything mode). The other modes will come soon.
-                
-                ⌛️ It takes about 6~ seconds to generate segment results. The concurrency_count of queue is 1, please wait for a moment when it is crowded.
-                
-                🚀 To get faster results, you can use a smaller input size and leave high_visual_quality unchecked.
-                
-                📣 You can also obtain the segmentation results of any Image through this Colab: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1oX14f6IneGGw612WgVlAiy91UHwFAvr9?usp=sharing)
-                
-                😚 A huge thanks goes out to the @HuggingFace Team for supporting us with GPU grant.
-                
-                🏠 Check out our [Model Card 🏃](https://huggingface.co/An-619/FastSAM)
+description_e = """ 源代码见： [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM). 
                 
               """
 
-description_p = """ # 🎯 Instructions for points mode
-                This is a demo on Github project 🏃 [Fast Segment Anything Model](https://github.com/CASIA-IVA-Lab/FastSAM). Welcome to give a star ⭐️ to it.
-                
-                1. Upload an image or choose an example.
-                
-                2. Choose the point label ('Add mask' means a positive point. 'Remove' Area means a negative point that is not segmented).
-                
-                3. Add points one by one on the image.
-                
-                4. Click the 'Segment with points prompt' button to get the segmentation results.
-                
-                **5. If you get Error, click the 'Clear points' button and try again may help.**
+description_p = """ 
                 
               """
 
