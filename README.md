@@ -1,14 +1,4 @@
----
-title: FastSAM
-emoji: 🐠
-colorFrom: pink
-colorTo: indigo
-sdk: gradio
-sdk_version: 3.35.2
-app_file: app_gradio.py
-pinned: false
-license: apache-2.0
----
+
 
 # Fast Segment Anything
 
