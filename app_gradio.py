@@ -6,6 +6,9 @@ from utils.tools import format_results, box_prompt, point_prompt, text_prompt
 from PIL import ImageDraw
 import numpy as np
 
+from openxlab.model import download
+download(model_repo='houshaowei/FastSAM', model_name=['CLIP_ViT_B_32','FastSAM'], output='./weights/')
+
 # Load the pre-trained model
 model = YOLO('./weights/FastSAM.pt')
 
