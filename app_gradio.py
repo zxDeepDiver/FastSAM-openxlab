@@ -21,7 +21,7 @@ device = torch.device(
 )
 
 # Description
-title = "<center><strong><font size='8'>🏃 Fast Segment Anything 🤗</font></strong></center>"
+title = "<center><strong><font size='8'> Fast Segment Anything </font></strong></center>"
 
 news = """ # 📖 News
         2023-8-2 成功上线 OpenXLab 
